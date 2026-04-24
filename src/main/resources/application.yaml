@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/heatrun
+    username: heatrun
+    password: heatrun
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none        # Flyway가 스키마 관리하므로 validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  flyway:
+    enabled: false  # 임시 비활성화
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
