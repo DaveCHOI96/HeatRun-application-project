@@ -74,6 +74,8 @@ dependencies {
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+	//UUID v7
+	implementation("com.github.f4b6a3:uuid-creator:6.0.0")
 }
 
 tasks.withType<Test> {
