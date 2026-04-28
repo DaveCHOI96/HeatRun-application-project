@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.entity;
 
+import com.main.heatrun.global.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,7 +22,7 @@ indexes = {
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class HeatmapTile {
+public class HeatmapTile extends BaseEntity {
 
     // 기본키 — IDENTITY (대용량, UUID v7과 성능 동일하나 단순성 선택)
     @Id

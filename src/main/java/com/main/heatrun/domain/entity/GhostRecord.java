@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ghost_record")
+@Table(name = "ghost_records")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GhostRecord {

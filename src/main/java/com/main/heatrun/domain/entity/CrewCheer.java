@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.entity;
 
+import com.main.heatrun.global.base.BaseTimeEntity;
 import com.main.heatrun.global.enums.CheerType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -17,7 +18,7 @@ indexes = {
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CrewCheer {
+public class CrewCheer extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

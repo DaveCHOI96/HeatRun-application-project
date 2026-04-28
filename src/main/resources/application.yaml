@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none        # Flyway가 스키마 관리하므로 validate
+      ddl-auto: validate        # Flyway가 스키마 관리하므로 validate (검증)
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -15,10 +15,13 @@ spring:
     show-sql: false
 
   flyway:
-    enabled: false  # 임시 비활성화
+    enabled: true  # 임시 비활성화 # Flyway가 스키마 관리
     locations: classpath:db/migration
 
   data:
     redis:
       host: localhost
       port: 6380
+
+server:
+  port: 8088

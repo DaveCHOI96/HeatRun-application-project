@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.entity;
 
+import com.main.heatrun.global.base.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_title",
+@Table(name = "user_titles",
 uniqueConstraints = {
         // 유저 x 칭호 복합 유니크 - 중복 획득 방지
         @UniqueConstraint(name = "uk_user_title",
@@ -16,7 +17,7 @@ uniqueConstraints = {
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserTitle {
+public class UserTitle extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
