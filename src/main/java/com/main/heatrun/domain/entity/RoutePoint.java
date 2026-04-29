@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.Point;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "route_point",
+@Table(name = "route_points",
      indexes = {
         // 세션별 순서 조회 인덱스 - 러닝 경로 재현 시 사용
         @Index(name = "idx_route_points_session_sequence",
