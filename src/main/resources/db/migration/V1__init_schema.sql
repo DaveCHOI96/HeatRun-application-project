@@ -166,7 +166,7 @@ CREATE TABLE crews
     description         VARCHAR(200),
     visibility          VARCHAR(20)   NOT NULL DEFAULT 'PUBLIC',
     max_members         INT           NOT NULL DEFAULT 50,
-    memberCount         INT           NOT NULL DEFAULT 1,
+    member_count        INT           NOT NULL DEFAULT 1,
 
     CONSTRAINT pk_crews PRIMARY KEY (id),
     CONSTRAINT fk_crews_leader FOREIGN KEY (leader_user_id) REFERENCES users (id),
@@ -240,7 +240,7 @@ CREATE TABLE user_levels
 );
 
 COMMENT ON TABLE user_levels IS '유저 레벨 경험치 유저당 1 row';
-COMMENT ON COLUMN user_levels.exp_to_next_level IS '현재레벨 x 100으로 증가'
+COMMENT ON COLUMN user_levels.exp_to_next_level IS '현재레벨 x 100으로 증가';
 
 -- =====================================================
 -- exp_logs

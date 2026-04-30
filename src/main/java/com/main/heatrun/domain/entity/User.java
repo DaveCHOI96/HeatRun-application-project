@@ -7,7 +7,7 @@ import com.main.heatrun.global.enums.Provider;
 import com.main.heatrun.global.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
+
 import org.locationtech.jts.geom.Point;
 
 import java.util.UUID;

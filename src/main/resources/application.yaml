@@ -17,6 +17,7 @@ spring:
   flyway:
     enabled: true  # 임시 비활성화 # Flyway가 스키마 관리
     locations: classpath:db/migration
+    baseline-on-migrate: true
 
   data:
     redis:
