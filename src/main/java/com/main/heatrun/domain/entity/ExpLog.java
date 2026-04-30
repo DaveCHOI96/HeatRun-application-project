@@ -1,6 +1,7 @@
 package com.main.heatrun.domain.entity;
 
 import com.main.heatrun.global.base.BaseEntity;
+import com.main.heatrun.global.base.BaseTimeEntity;
 import com.main.heatrun.global.enums.ExpSourceType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -19,7 +20,7 @@ indexes = {
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ExpLog extends BaseEntity {
+public class ExpLog extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
