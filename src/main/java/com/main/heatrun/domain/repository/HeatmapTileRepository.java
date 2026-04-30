@@ -32,7 +32,13 @@ public interface HeatmapTileRepository extends JpaRepository<HeatmapTile, Long> 
             @Param("maxY") Integer maxY);
 
     // 크루 통합 히트맵 - 크루원 정체 타일 합산 (영역 점령)
-    @Query()
+    @Query("""
+           SELECT ht FROM HeatmapTile ht
+           WHERE ht.user.id IN :userIds
+           AND ht.zoomLevel = :zoomLevel
+           AND ht.tileX BETWEEN :minX AND :maxX
+           AND ht.tileY BETWEEN :minY AND :maxY
+           """)
     List<HeatmapTile> findCrewHeatmap(
             @Param("userIds") List<UUID> userIds,
             @Param("zoomLevel") Integer zoomLevel,
@@ -40,4 +46,7 @@ public interface HeatmapTileRepository extends JpaRepository<HeatmapTile, Long> 
             @Param("maxX") Integer maxX,
             @Param("minY") Integer minY,
             @Param("maxY") Integer maxY);
+
+    // 유저의 총 타일 수 - 탐험 통계
+    long countByUserId(UUID userId);
 }
