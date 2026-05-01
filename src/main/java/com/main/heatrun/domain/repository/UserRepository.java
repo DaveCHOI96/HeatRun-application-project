@@ -21,4 +21,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // 이메일 존재 여부 - 회원가입 중복 체크
     boolean existsByEmail(String email);
 
+    // 닉네임 존재 여부 - 닉네임 중복 체크
+    boolean existsByNickname(String nickname);
+
 }

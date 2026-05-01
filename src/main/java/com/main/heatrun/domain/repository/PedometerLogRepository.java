@@ -27,4 +27,8 @@ public interface PedometerLogRepository extends JpaRepository<PedometerLog, UUID
             @Param("userId") UUID userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    // 최근 7일 기록 - 주간 리포트
+    List<PedometerLog> findByUserIdAndLogDateBetweenOrderByLogDateDesc(
+            UUID userId, LocalDate startDate, LocalDate endDate);
 }
