@@ -1,6 +1,7 @@
 package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.RunningSession;
+import com.main.heatrun.global.enums.RunningStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,7 +17,7 @@ public interface RunningSessionRepository extends JpaRepository<RunningSession, 
 
     // 유저의 진행중인 세션 - 중복 러닝 방지
     Optional<RunningSession> findByUserIdAndStatus(
-            UUID userId, RunningSession.RunningStatus status);
+            UUID userId, RunningStatus status);
 
     // 유저의 완료된 세션 중 최단 페이스 - PB 계산
     @Query("""
@@ -32,5 +33,5 @@ public interface RunningSessionRepository extends JpaRepository<RunningSession, 
             @Param("minDistance") Double minDistance);
 
     // 유저의 완료된 세션 수 - 스트릭 계산용
-    long countByUserIdAndStatus(UUID userId, RunningSession.RunningStatus status);
+    long countByUserIdAndStatus(UUID userId, RunningStatus status);
 }

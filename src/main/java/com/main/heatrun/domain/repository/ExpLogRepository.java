@@ -1,6 +1,7 @@
 package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.ExpLog;
+import com.main.heatrun.global.enums.ExpSourceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,5 +22,5 @@ public interface ExpLogRepository extends JpaRepository<ExpLog, Long> {
            """)
     Integer sumExpBySourceType(
             @Param("userId") UUID userId,
-            @Param("sourceType") ExpLog.ExpSourceType sourceType);
+            @Param("sourceType") ExpSourceType sourceType);
 }

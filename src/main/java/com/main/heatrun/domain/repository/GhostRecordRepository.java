@@ -1,6 +1,7 @@
 package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.GhostRecord;
+import com.main.heatrun.global.enums.RecordType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +14,7 @@ public interface GhostRecordRepository extends JpaRepository<GhostRecord, UUID> 
 
     // 유저의 PB 고스트 조회
     Optional<GhostRecord> findByOwnerUserIdAndRecordType(
-            UUID userId, GhostRecord.RecordType recordType);
+            UUID userId, RecordType recordType);
 
     // 공개된 고스트 목록 - 다른 유저가 선택 가능
     List<GhostRecord> findByIsPublicTrueOrderByDurationSecondsAsc();
