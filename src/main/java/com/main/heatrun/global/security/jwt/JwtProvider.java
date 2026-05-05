@@ -24,7 +24,7 @@ public class JwtProvider {
 
     // 키 생성
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(
+        return Keys.hmacShaKeyFor( // 문자열 secret을 HMAC-SHA 알고리즘용 키로 변환
                 jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)
         );
     }
@@ -37,14 +37,19 @@ public class JwtProvider {
         Date expiry = new Date(now.getTime() + jwtProperties.getAccessTokenExpiration());
 
         return Jwts.builder()
-                .subject(user.getId().toString())
+                .subject(user.getId().toString()) // 유저 식별자
+                // claim = 커스텀 데이터 추가 (서버에서 DB조회 없이 바로 사용)
                 .claim("email", user.getEmail())
                 .claim("nickname", user.getNickname())
                 .claim("provider", user.getProvider().name())
-                .issuedAt(now)
-                .expiration(expiry)
-                .signWith(getSigningKey())
-                .compact();
+                .issuedAt(now)   // 발급 시간
+                .expiration(expiry)  // 만료 시간
+                .signWith(getSigningKey())  // 서명 (이것이 없으면 누구나 토큰 위조 가능)
+                .compact();  // 문자열로 직렬화
+
+        //왜 email, nickname을 claim에 넣나?
+        //→ API 요청마다 DB 조회 없이 토큰에서 바로 꺼내 쓸 수 있음
+        //→ 성능 최적화
     }
 
     // 리프레시 토큰 발급 + Redis 저장 (Sliding)
@@ -61,12 +66,16 @@ public class JwtProvider {
 
         // Redis에 저장 - 접속마다 TTL 리셋 (Sliding Session)
         redisTemplate.opsForValue().set(
-                getRefreshKey(user.getId()),
+                getRefreshKey(user.getId()),  // "refresh:{userId}"
                 refreshToken,
                 jwtProperties.getRefreshTokenExpiration(),
-                TimeUnit.MILLISECONDS
+                TimeUnit.MILLISECONDS   // TTL 단위
         );
         return refreshToken;
+        //Sliding Session
+        //→ 액세스 토큰 재발급마다 이 함수 호출
+        //→ TTL이 14일로 리셋
+        //→ 계속 쓰는 한 로그아웃 안됨
     }
 
     // 토큰 검증
@@ -75,9 +84,9 @@ public class JwtProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey())
+                    .verifyWith(getSigningKey()) // 서명이 우리 서버가 발급한 게 맞는지 확인
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token); // 만료시간 체크
             return true;
         } catch (ExpiredJwtException e) {
             log.warn("만료된 JWT 토큰: {}", e.getMessage());
@@ -93,6 +102,7 @@ public class JwtProvider {
 
     //  블랙리스트 체크 (강제 로그아웃 / 계정 정지)
     public boolean isBlacklisted(UUID userId) {
+        // Redis에 "blacklist:{userId}" 키가 있는지 확인
         Boolean result = redisTemplate.hasKey(getBlacklistKey(userId));
         return result != null && result;
     }
