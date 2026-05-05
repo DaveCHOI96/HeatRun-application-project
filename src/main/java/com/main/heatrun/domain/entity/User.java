@@ -127,4 +127,5 @@ public class User extends BaseEntity {
         return this.status == UserStatus.ACTIVE;
     }
 
+
 }
