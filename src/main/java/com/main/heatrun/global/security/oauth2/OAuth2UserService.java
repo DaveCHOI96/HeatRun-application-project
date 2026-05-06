@@ -3,6 +3,7 @@ package com.main.heatrun.global.security.oauth2;
 import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.UserRepository;
 import com.main.heatrun.global.enums.Provider;
+import com.main.heatrun.global.util.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class OAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final NicknameGenerator nicknameGenerator;
 
     @Override
     @Transactional
@@ -45,7 +47,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String providerId;
         String email;
-        String nickname;
+        String baseNickname;
 
         if (provider == Provider.KAKAO) {
             providerId = String.valueOf(attributes.get("id"));
@@ -54,11 +56,11 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             Map<String, Object> kakaoProfile =
                     (Map<String, Object>) kakaoAccount.get("profile");
             email = (String) kakaoAccount.get("email");
-            nickname = (String) kakaoProfile.get("nickname");
+            baseNickname = (String) kakaoProfile.get("nickname");
         } else { // GOOGLE
             providerId = (String) attributes.get("sub");
             email = (String) attributes.get("email");
-            nickname = (String) attributes.get("name");
+            baseNickname = (String) attributes.get("name");
         }
         //카카오 응답 JSON 구조
         //{
@@ -80,34 +82,41 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         //
         //각 소셜마다 응답 구조가 달라서 분기 처리 필요
 
+        // 유니크 닉네임 생성 NicknameGenerator로 위임
+        String uniqueNickname = nicknameGenerator.generate(baseNickname);
+
+
         // 기존 유저 조회 or 신규 가입
         String finalEmail = email;
-        String finalNickname = nickname;
         String finalProviderId = providerId;
+        String finalNickname = uniqueNickname;
 
-        User user = userRepository
+        userRepository
                 //1단계: provider + providerId로 조회
                 //→ 기존 소셜 로그인 유저 → 바로 반환
                 .findByProviderAndProviderId(provider, providerId)
-                .orElseGet(() -> {
+                .orElseGet(() ->
                     // 이메일로 기존 가입 여부 확인
                     //2단계: email로 조회
                     //→ 같은 이메일로 다른 소셜 / 이메일로 가입한 유저
                     //→ 기존 계정 반환 (중복 가입 방지)
-                    return userRepository.findByEmail(finalEmail)
-                            .orElseGet(() -> userRepository.save(
-                                    //3단계: 없으면 신규 가입
-                                    //→ User.createSocialUser()로 생성
-                                    //→ DB 저장
-                                    User.createSocialUser(
-                                            finalEmail,
-                                            finalNickname,
-                                            provider,
-                                            finalProviderId
-                                    )
-                            ));
-                });
-
+                    userRepository.findByEmail(finalEmail)
+                            .orElseGet(() -> {
+                                User newUser = userRepository.save(
+                                        User.createSocialUser(
+                                                //3단계: 없으면 신규 가입
+                                                //→ User.createSocialUser()로 생성
+                                                //→ DB 저장
+                                                finalEmail,
+                                                finalNickname,
+                                                provider,
+                                                finalProviderId
+                                        )
+                                );
+                                log.info("소셜 회원가입 완료: {} (닉네임: {}", finalEmail, finalNickname);
+                                return newUser;
+                            })
+                );
         return oAuth2User;
     }
 }

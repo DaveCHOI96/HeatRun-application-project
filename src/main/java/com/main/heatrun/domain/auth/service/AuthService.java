@@ -10,6 +10,7 @@ import com.main.heatrun.domain.repository.UserLevelRepository;
 import com.main.heatrun.domain.repository.UserRepository;
 import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.security.jwt.JwtProvider;
+import com.main.heatrun.global.util.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class AuthService {
     private final UserLevelRepository userLevelRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final NicknameGenerator nicknameGenerator;
 
     // 회원가입
     @Transactional
@@ -38,11 +40,8 @@ public class AuthService {
             throw new BusinessException("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT);
         }
 
-        // 닉네임 중복 체크
-        if (userRepository.existsByNickname(request.nickname())) {
-            throw new BusinessException(
-                    "이미 사용 중인 닉네임입니다.", HttpStatus.CONFLICT);
-        }
+        // 닉네임 유니크 생성
+        String uniqueNickname = nicknameGenerator.generate(request.nickname());
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -50,7 +49,7 @@ public class AuthService {
         // 유저 생성 + 저장
         User user = User.createLocalUser(
                 request.email(),
-                request.nickname(),
+                uniqueNickname,
                 encodedPassword
         );
         userRepository.save(user);
@@ -63,7 +62,7 @@ public class AuthService {
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(user);
 
-        log.info("회원가입 완료: {}", user.getEmail());
+        log.info("회원가입 완료: {} (닉네임: {})", user.getEmail(), uniqueNickname);
 
         return new TokenResponse(
                 accessToken,

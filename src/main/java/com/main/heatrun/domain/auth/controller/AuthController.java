@@ -34,14 +34,17 @@ public class AuthController {
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Validated @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        TokenResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 
+    // 토큰 재발급
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refresh(@Validated @RequestBody RefreshRequest request) {
         return ResponseEntity.ok(authService.refresh(request));
     }
 
+    // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
         authService.logout(user.getId());
