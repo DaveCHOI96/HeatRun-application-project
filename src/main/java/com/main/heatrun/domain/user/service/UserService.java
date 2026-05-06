@@ -2,14 +2,18 @@ package com.main.heatrun.domain.user.service;
 
 import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.UserRepository;
+import com.main.heatrun.domain.user.dto.UpdateLocationScopeRequest;
 import com.main.heatrun.domain.user.dto.UpdateNicknameRequest;
+import com.main.heatrun.domain.user.dto.UpdatePrivacyZoneRequest;
 import com.main.heatrun.domain.user.dto.UserResponse;
 import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.security.jwt.JwtProvider;
 import com.main.heatrun.global.util.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -55,6 +59,55 @@ public class UserService {
 
         log.info("닉네임 변경: {} -> {}", user.getNickname(), uniqueNickname);
         return UserResponse.from(user);
+    }
+
+    // 프로필 이미지 변경
+    @Transactional
+    public UserResponse updateProfileImage(UUID userId, String imageUrl) {
+        User user = findActiveUser(userId);
+        user.updateProfileImage(imageUrl);
+        return UserResponse.from(user);
+    }
+
+    // 프라이버시 존 설정
+    @Transactional
+    public UserResponse updatePrivacyZone(UUID userId, UpdatePrivacyZoneRequest request) {
+        User user = findActiveUser(userId);
+
+        // 위도/경도 → PostGIS Point 변환
+        Point point = geometryFactory.createPoint(
+                new Coordinate(request.longitude(), request.latitude())
+        );
+
+        user.updatePrivacyZone(point, request.radius());
+
+        log.info("프라이버시 존 설정: userId={}, radius={}m",
+                userId, request.radius());
+
+        return UserResponse.from(user);
+    }
+
+    // 위치 공유 범위 변경
+    @Transactional
+    public UserResponse updateLocationScope(UUID userId, UpdateLocationScopeRequest request) {
+        User user = findActiveUser(userId);
+        user.updateLocationShareScope(request.locationShareScope());
+        return UserResponse.from(user);
+    }
+
+    // ---- 계정 관리 ----
+
+    //계정 비활성화 (탈퇴)
+    @Transactional
+    public void deactivate(UUID userId) {
+        User user = findActiveUser(userId);
+
+        // Redis 리프레시 토큰 삭제 + 블랙리스트 등록
+        jwtProvider.deleteRefreshToken(userId);
+        jwtProvider.addBlacklist(userId);
+
+        user.deactivate();
+        log.info("계정 비활성화: {}", userId);
     }
 
     // -- 공통 메서드 --
