@@ -1,15 +1,13 @@
 package com.main.heatrun.domain.running.service;
 
-import com.main.heatrun.domain.entity.ExpLog;
-import com.main.heatrun.domain.entity.RoutePoint;
-import com.main.heatrun.domain.entity.RunningSession;
-import com.main.heatrun.domain.entity.User;
+import com.main.heatrun.domain.entity.*;
 import com.main.heatrun.domain.repository.*;
 import com.main.heatrun.domain.running.dto.CompleteRunningRequest;
 import com.main.heatrun.domain.running.dto.RoutePointRequest;
 import com.main.heatrun.domain.running.dto.RunningSessionResponse;
 import com.main.heatrun.domain.running.dto.StartRunningRequest;
 import com.main.heatrun.global.enums.ExpSourceType;
+import com.main.heatrun.global.enums.RecordType;
 import com.main.heatrun.global.enums.RunningStatus;
 import com.main.heatrun.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -125,6 +125,7 @@ public class RunningService {
     }
 
     // 러닝 완료
+    @Transactional
     public RunningSessionResponse completeRunning(UUID userId, UUID sessionId, CompleteRunningRequest request) {
         RunningSession session = findMySession(userId, sessionId);
 
@@ -145,7 +146,46 @@ public class RunningService {
         grantExp(userId, expEarned, ExpSourceType.RUNNING, session.getId());
 
         // PB체크 및 고스트 자동 등록
+        checkAndCreatePersonalBest(userId, session);
+
+        log.info("러닝 완료: sessionId={}, distance={}km, exp={}",
+                sessionId, request.totalDistanceKm(), expEarned);
+
+        return RunningSessionResponse.from(session);
     }
+
+    // 러닝 기록 조회
+    @Transactional(readOnly = true)
+    public List<RunningSessionResponse> getMyRunningSessions(UUID userId) {
+        return runningSessionRepository
+                .findByUserIdOrderByStartedAtDesc(userId)
+                .stream()
+                .map(RunningSessionResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    // 러닝 상세 조회
+    @Transactional(readOnly = true)
+    public RunningSessionResponse getRunningSession(UUID userId, UUID sessionId) {
+        return RunningSessionResponse.from(findMySession(userId, sessionId));
+    }
+
+    // GPS 경로 조회 (고스트 재현용)
+    @Transactional(readOnly = true)
+    public List<RoutePointRequest> getRoutePoints(UUID sessionId) {
+        return routePointRepository
+                .findBySessionIdOrderBySequenceNumberAsc(sessionId)
+                .stream()
+                .map(point -> new RoutePointRequest(
+                        point.getLocation().getY(),
+                        point.getLocation().getX(),
+                        point.getAltitude(),
+                        point.getSpeed(),
+                        point.getSequenceNumber()
+                ))
+                .collect(Collectors.toList());
+    }
+
     // ---- EXP 지급 공통 메서드 ----
     private void grantExp(UUID userId, int expEarned, ExpSourceType sourceType, UUID sourceId) {
 
@@ -159,6 +199,36 @@ public class RunningService {
                 .ifPresent(level -> level.addExp(expEarned));
 
         log.info("EXP 지급: userId={}, exp={}, source={}", userId, expEarned, sourceType);
+    }
+
+    // PB 체크 및 고스트 자동 등록
+    private void checkAndCreatePersonalBest(UUID userId, RunningSession session) {
+
+        // 현재 PB 조회
+        ghostRecordRepository
+                .findByOwnerUserIdAndRecordType(
+                        userId, RecordType.PERSONAL_BEST)
+                .ifPresentOrElse(
+                        existingPb -> {
+                            // 기존 PB보다 빠르면 갱신
+                            if (session.getAvgPace() < existingPb.getDurationSeconds()
+                                / (existingPb.getTotalDistanceKm() * 60)) {
+                                existingPb.makePrivate();
+                                ghostRecordRepository.save(
+                                        GhostRecord.createPersonalBest(
+                                                session.getUser(), session));
+                                log.info("PB 갱신: userId={}", userId);
+                            }
+                        },
+                        () -> {
+                            // PB 없으면 최초 등록
+                            ghostRecordRepository.save(
+                                    GhostRecord.createPersonalBest(
+                                            session.getUser(), session));
+                            log.info("PB 최초 등록: userId={}", userId);
+                        }
+                );
+                
     }
 
     // ---- 공통 메서드 ----
