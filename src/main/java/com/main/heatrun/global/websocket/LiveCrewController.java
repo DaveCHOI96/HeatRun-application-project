@@ -4,6 +4,7 @@ import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.CrewMemberRepository;
 import com.main.heatrun.domain.repository.UserRepository;
 import com.main.heatrun.global.exception.BusinessException;
+import com.main.heatrun.global.websocket.dto.CheerMessage;
 import com.main.heatrun.global.websocket.dto.LocationMessage;
 import com.main.heatrun.global.websocket.dto.LocationRequest;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +80,28 @@ public class LiveCrewController {
         if (senderId.equals(receiverId)) {
             return;
         }
+
+        // 크루 멤버인지 확인
+        if (!crewMemberRepository.existsByCrewIdAndUserId(crewId, senderId) ||
+               !crewMemberRepository.existsByCrewIdAndUserId(crewId, receiverId)) {
+            return;
+        }
+
+        CheerMessage message = new CheerMessage(
+                senderId,
+                sender.getNickname(),
+                receiverId,
+                null, // CheerType은 REST API에서 처리
+                LocalDateTime.now()
+        );
+
+        // 수신자에게만 개인 메시지 전송
+        messagingTemplate.convertAndSendToUser(
+                receiverId.toString(),
+                "/queue/cheer",
+                message
+        );
+        log.info("응원 WebSocket 전송: from={}, to={}", senderId, receiverId);
     }
 
     // ---- 공통 메서드 ----
