@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.entity;
 
+import com.main.heatrun.global.base.BaseTimeEntity;
 import com.main.heatrun.global.base.UuidV7Generator;
 import com.main.heatrun.global.enums.Visibility;
 import jakarta.persistence.*;
