@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 "/oauth2/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws/**"
                                 //→ 개발/테스트 시 Swagger UI로 API 확인 필요
                                 //→ 운영 배포 시에는 제거 권장
                         ).permitAll()

@@ -104,6 +104,30 @@ public class LiveCrewController {
         log.info("응원 WebSocket 전송: from={}, to={}", senderId, receiverId);
     }
 
+    // 러닝 종료 알림
+    // 클라이언트 → /app/stop/{crewId}
+    // 브로드캐스트 → /topic/crew/{crewId}/location (STOPPED 상태로)
+    @MessageMapping("/stop/{crewId}")
+    public void stopSharing(@DestinationVariable UUID crewId, SimpMessageHeaderAccessor headerAccessor) {
+        UUID userId = extractUserId(headerAccessor);
+        User user = findUser(userId);
+
+        //  STOPPED 상태로 마지막 메시지 전송
+        LocationMessage message = new LocationMessage(
+                userId,
+                user.getNickname(),
+                user.getProfileImageUrl(),
+                null, null, null,
+                "STOPPED",
+                LocalDateTime.now()
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/crew/" + crewId + "/location", message
+        );
+        log.info("위치 공유 종료: userId={}, crewId={}", userId, crewId);
+    }
+
     // ---- 공통 메서드 ----
 
     // WebSocket 세션에서 userId 추출
