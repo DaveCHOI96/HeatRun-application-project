@@ -3,6 +3,7 @@ package com.main.heatrun.global.websocket;
 import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.CrewMemberRepository;
 import com.main.heatrun.domain.repository.UserRepository;
+import com.main.heatrun.global.cache.LocationCacheService;
 import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.websocket.dto.CheerMessage;
 import com.main.heatrun.global.websocket.dto.LocationMessage;
@@ -18,6 +19,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -28,6 +30,8 @@ public class LiveCrewController {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
     private final CrewMemberRepository crewMemberRepository;
+    private final RedisWebSocketPublisher redisPublisher;
+    private final LocationCacheService locationCacheService;
 
     // 실시간 위치 전송
     // 클라이언트 -> /app/location/{crewId}
@@ -60,10 +64,39 @@ public class LiveCrewController {
                 LocalDateTime.now()
         );
 
+        // Redis Pub/Sub 으로 발행 -> 모든 서버로 브로드캐스트
+        // (단일 서버면 직접 WebSocket 브로드캐스트와 동일)
+        redisPublisher.publishLocation(crewId, message);
+
         // 크루 전체에게 브로드캐스트
-        messagingTemplate.convertAndSend("/topic/crew/" + crewId + "/location", message);
-        log.debug("위치 전송: userId={}, crewId={}, lat={}, lng={}",
-                userId, crewId, request.latitude(), request.longitude());
+//        messagingTemplate.convertAndSend("/topic/crew/" + crewId + "/location", message);
+//        log.debug("위치 전송: userId={}, crewId={}, lat={}, lng={}",
+//                userId, crewId, request.latitude(), request.longitude());
+    }
+
+    // 크루 현재 위치 목록 조회
+    // 앱 재접속 시 현재 러닝 중인 크루원 위치 복원
+    @MessageMapping("/crew/{crewId}/locations")
+    public void getCrewLocations(
+            @DestinationVariable UUID crewId, SimpMessageHeaderAccessor headerAccessor) {
+        UUID userId = extractUserId(headerAccessor);
+
+        if (!crewMemberRepository.existsByCrewIdAndUserId(crewId, userId)) {
+            return;
+        }
+
+        // 크루 멤버 ID 목록 조회
+        List<UUID> memberIds = crewMemberRepository.findUserIdsByCrewId(crewId);
+
+        // Redis에서 현재 위치 목록 조회
+        List<LocationMessage> locations = locationCacheService.getCrewLocations(memberIds);
+
+        // 요청한 유저에게만 전송
+        messagingTemplate.convertAndSendToUser(
+                userId.toString(),
+                "/queue/crew-locations",
+                locations
+        );
     }
 
     // ---- 실시간 응원 전송 ----
@@ -112,6 +145,9 @@ public class LiveCrewController {
         UUID userId = extractUserId(headerAccessor);
         User user = findUser(userId);
 
+        // Redis 위치 캐시 삭제
+        locationCacheService.deleteLocation(userId);
+
         //  STOPPED 상태로 마지막 메시지 전송
         LocationMessage message = new LocationMessage(
                 userId,
@@ -122,9 +158,8 @@ public class LiveCrewController {
                 LocalDateTime.now()
         );
 
-        messagingTemplate.convertAndSend(
-                "/topic/crew/" + crewId + "/location", message
-        );
+        redisPublisher.publishLocation(crewId, message);
+
         log.info("위치 공유 종료: userId={}, crewId={}", userId, crewId);
     }
 
@@ -132,8 +167,7 @@ public class LiveCrewController {
 
     // WebSocket 세션에서 userId 추출
     private UUID extractUserId(SimpMessageHeaderAccessor headerAccessor) {
-        String userId = (String) headerAccessor.getUser().getName();
-        return UUID.fromString(userId);
+        return UUID.fromString(headerAccessor.getUser().getName());
     }
 
     private User findUser(UUID userId) {
