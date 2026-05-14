@@ -61,4 +61,12 @@ public class UserController {
         userService.deactivate(user.getId());
         return ResponseEntity.ok().build();
     }
+
+    // FCM 토큰 저장 (앱 최초실행 / 토큰 갱신 시)
+    @PutMapping("/me/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(
+            @AuthenticationPrincipal User user, @RequestParam String fcmToken) {
+        userService.updateFcmToken(user.getId(), fcmToken);
+        return ResponseEntity.ok().build();
+    }
 }

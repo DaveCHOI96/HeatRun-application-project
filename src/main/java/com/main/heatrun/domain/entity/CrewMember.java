@@ -86,4 +86,9 @@ public class CrewMember {
         return this.role == CrewRole.LEADER;
     }
 
+    // 일반 멤버로 강등 (리더 위임 시)
+    public void demoteToMember() {
+        this.role = CrewRole.MEMBER;
+    }
+
 }

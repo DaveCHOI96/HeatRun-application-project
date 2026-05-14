@@ -95,7 +95,7 @@ public class CrewController {
     }
 
     // 응원 보내기
-    @PostMapping("/{crewId}/cheer/{receiverId")
+    @PostMapping("/{crewId}/cheer/{receiverId}")
     public ResponseEntity<Void> sendCheer(
             @AuthenticationPrincipal User user, @PathVariable UUID crewId,
             @PathVariable UUID receiverId, @Validated @RequestBody CheerRequest request) {

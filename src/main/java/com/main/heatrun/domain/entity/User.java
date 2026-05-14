@@ -71,6 +71,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private UserStatus status = UserStatus.ACTIVE;
 
+    // FCM 디바이스 토큰 - 푸시 알림 발송용
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
+
 
     // 정적 팩토리 메서드
     public static User createLocalUser(String email, String nickname, String encodedPassword) {
@@ -125,6 +129,11 @@ public class User extends BaseEntity {
     // 활성 상태 여부 확인
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE;
+    }
+
+    // FCM 토큰 업데이트
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 
 

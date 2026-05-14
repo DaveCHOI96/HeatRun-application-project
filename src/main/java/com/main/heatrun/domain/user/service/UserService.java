@@ -95,6 +95,14 @@ public class UserService {
         return UserResponse.from(user);
     }
 
+    // FCM 토큰 업데이트
+    @Transactional
+    public void updateFcmToken(UUID userId, String fcmToken) {
+        User user = findActiveUser(userId);
+        user.updateFcmToken(fcmToken);
+        log.info("FCM 토큰 업데이트: userId={}", userId);
+    }
+
     // ---- 계정 관리 ----
 
     //계정 비활성화 (탈퇴)

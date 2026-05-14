@@ -8,6 +8,7 @@ import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.*;
 import com.main.heatrun.global.enums.RunningStatus;
 import com.main.heatrun.global.exception.BusinessException;
+import com.main.heatrun.global.fcm.FcmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,7 @@ public class CrewService {
     private final CrewCheerRepository crewCheerRepository;
     private final UserRepository userRepository;
     private final RunningSessionRepository runningSessionRepository;
+    private final FcmService fcmService;
 
     // 응원 제한 시간 - 10분에 1회
     private static final int CHEER_LIMIT_MINUTES = 10;
@@ -187,8 +189,7 @@ public class CrewService {
                 .orElseThrow(() -> new BusinessException("크루 멤버를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         // 크루 리더 변경
-        Crew crew = findCrew(crewId);
-        currentLeaderMember.promoteToLeader(); // 기존 리더 역할 유지용 메서드
+        currentLeaderMember.demoteToMember(); // 기존 리더 역할 유지용 메서드
         newLeaderMember.promoteToLeader();
 
         log.info("리더 위임: crewId={}, from={}, to={}", crewId, userId, targetUserId);
@@ -226,6 +227,13 @@ public class CrewService {
 
         CrewCheer cheer = CrewCheer.send(
                 sender, receiver, crew, request.cheerType());
+        crewCheerRepository.save(cheer);
+
+        // FCM 푸시 알림 발송
+        if (receiver.getFcmToken() != null) {
+            fcmService.sendCheerNotification(receiver.getFcmToken(), sender.getNickname());
+        }
+        log.info("응원 전송: from={}, to={}, type={}", senderId, receiverId, request.cheerType());
     }
     
     // 크루 삭제
