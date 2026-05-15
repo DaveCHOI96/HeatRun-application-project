@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -24,9 +25,13 @@ public class FirebaseConfig {
             }
 
             // @Value 없이 직접 경로 지정
-            InputStream serviceAccount =
-                    new ClassPathResource("firebase-service-account.json")
-                            .getInputStream();
+//            InputStream serviceAccount =
+//                    new ClassPathResource("firebase-service-account.json")
+//                            .getInputStream();
+            // git push를 위해 절대 경로로 직접 지정
+            FileInputStream serviceAccount = new FileInputStream(
+                    "C:/Users/USER/Desktop/firebase-service-account.json"
+            );
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(
