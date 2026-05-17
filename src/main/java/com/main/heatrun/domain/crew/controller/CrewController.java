@@ -3,8 +3,8 @@ package com.main.heatrun.domain.crew.controller;
 import com.main.heatrun.domain.crew.dto.*;
 import com.main.heatrun.domain.crew.service.CrewService;
 import com.main.heatrun.domain.entity.User;
+import com.main.heatrun.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -35,10 +35,11 @@ public class CrewController {
 
     // 크루 검색 (공개 크루)
     @GetMapping("/search")
-    public ResponseEntity<Page<CrewResponse>> searchCrews(
+    public ResponseEntity<PageResponse<CrewResponse>> searchCrews(
             @RequestParam(defaultValue = "") String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(crewService.searchCrews(keyword, pageable));
+        return ResponseEntity.ok(
+                PageResponse.from(crewService.searchCrews(keyword, pageable)));
     }
 
     // 크루 상세 조회
