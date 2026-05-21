@@ -1,0 +1,1 @@
+ALTER TABLE ghost_records ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT now();

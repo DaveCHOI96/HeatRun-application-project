@@ -16,6 +16,8 @@ public interface GhostRecordRepository extends JpaRepository<GhostRecord, UUID> 
     Optional<GhostRecord> findByOwnerUserIdAndRecordType(
             UUID userId, RecordType recordType);
 
+    List<GhostRecord> findByOwnerUserId(UUID userId);
+
     // 공개된 고스트 목록 - 다른 유저가 선택 가능
     List<GhostRecord> findByIsPublicTrueOrderByDurationSecondsAsc();
 

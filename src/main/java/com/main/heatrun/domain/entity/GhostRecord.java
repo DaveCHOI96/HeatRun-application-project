@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.entity;
 
+import com.main.heatrun.global.base.BaseTimeEntity;
 import com.main.heatrun.global.base.UuidV7Generator;
 import com.main.heatrun.global.enums.RecordType;
 import jakarta.persistence.*;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @Table(name = "ghost_records")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GhostRecord {
+public class GhostRecord extends BaseTimeEntity {
 
     @Id
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)

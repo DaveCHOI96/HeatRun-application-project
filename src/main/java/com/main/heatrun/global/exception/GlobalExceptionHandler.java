@@ -22,6 +22,7 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidException(
             MethodArgumentNotValidException e) {
         String message = e.getBindingResult()
@@ -33,6 +34,17 @@ public class GlobalExceptionHandler {
                 .body(Map.of(
                         "status", 400,
                         "message", message
+                ));
+    }
+
+    // 나머지 모든 예외처리
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        return ResponseEntity
+                .internalServerError()
+                .body(Map.of(
+                        "status", 500,
+                        "message", "서버 오류가 발생했습니다."
                 ));
     }
 }
