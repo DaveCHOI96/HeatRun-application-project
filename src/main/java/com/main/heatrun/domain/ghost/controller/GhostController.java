@@ -6,11 +6,10 @@ import com.main.heatrun.domain.ghost.service.GhostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/ghosts")
@@ -32,4 +31,19 @@ public class GhostController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ghostService.getPublicGhosts());
     }
+
+    // 고스트 공개 전환
+    @PutMapping("/{ghostId}/public")
+    public ResponseEntity<GhostRecordResponse> makePublic(
+            @AuthenticationPrincipal User user, @PathVariable UUID ghostId) {
+        return ResponseEntity.ok(ghostService.makePublic(user.getId(), ghostId));
+    }
+
+    // 고스트 비공개 전환
+    @PutMapping("/{ghostId}/private")
+    public ResponseEntity<GhostRecordResponse> makePrivate(
+            @AuthenticationPrincipal User user, @PathVariable UUID ghostId) {
+        return ResponseEntity.ok(ghostService.makePrivate(user.getId(), ghostId));
+    }
+
 }
