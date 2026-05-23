@@ -42,6 +42,7 @@ public class JwtProvider {
                 .claim("email", user.getEmail())
                 .claim("nickname", user.getNickname())
                 .claim("provider", user.getProvider().name())
+                .claim("role", user.getRole().name())
                 .issuedAt(now)   // 발급 시간
                 .expiration(expiry)  // 만료 시간
                 .signWith(getSigningKey())  // 서명 (이것이 없으면 누구나 토큰 위조 가능)

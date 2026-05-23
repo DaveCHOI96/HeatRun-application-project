@@ -61,7 +61,8 @@ public class JwtFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(
                                     user,
                                     null,
-                                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                    List.of(new SimpleGrantedAuthority(
+                                            "ROLE_" + user.getRole().name()))
                             );
                     // Spring Security의 인증 정보 저장소
                     SecurityContextHolder.getContext()

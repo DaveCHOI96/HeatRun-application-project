@@ -149,5 +149,10 @@ public class User extends BaseEntity {
         this.role = role;
     }
 
+    // 이메일 업데이트 (소셜 로그인 시 이메일 변경 감지)
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
 
 }

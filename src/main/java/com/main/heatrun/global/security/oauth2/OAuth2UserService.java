@@ -95,28 +95,27 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 //1단계: provider + providerId로 조회
                 //→ 기존 소셜 로그인 유저 → 바로 반환
                 .findByProviderAndProviderId(provider, providerId)
-                .orElseGet(() ->
-                    // 이메일로 기존 가입 여부 확인
-                    //2단계: email로 조회
-                    //→ 같은 이메일로 다른 소셜 / 이메일로 가입한 유저
-                    //→ 기존 계정 반환 (중복 가입 방지)
-                    userRepository.findByEmail(finalEmail)
-                            .orElseGet(() -> {
-                                User newUser = userRepository.save(
-                                        User.createSocialUser(
-                                                //3단계: 없으면 신규 가입
-                                                //→ User.createSocialUser()로 생성
-                                                //→ DB 저장
-                                                finalEmail,
-                                                finalNickname,
-                                                provider,
-                                                finalProviderId
-                                        )
-                                );
-                                log.info("소셜 회원가입 완료: {} (닉네임: {}", finalEmail, finalNickname);
-                                return newUser;
-                            })
-                );
+                .map(existingUser -> {
+                    // 이멜일 변경됐으면 업데이트
+                    if (!existingUser.getEmail().equals(finalEmail)) {
+                        existingUser.updateEmail(finalEmail);
+                        log.info("소셜 계정 이메일 업데이트: {} -> {}", existingUser.getEmail(), finalEmail);
+                    }
+                    return existingUser;
+                })
+                .orElseGet(() -> {
+                            // 신규 가입 - 이메일 중복 상관없이 항상 새 계정 생성
+                            User newUser = userRepository.save(
+                                    User.createSocialUser(
+                                            finalEmail,
+                                            finalNickname,
+                                            provider,
+                                            finalProviderId
+                                    )
+                            );
+                            log.info("소셜 회원가입 완료: provider={}, email={}", provider, finalEmail);
+                            return newUser;
+                        });
         return oAuth2User;
     }
 }
