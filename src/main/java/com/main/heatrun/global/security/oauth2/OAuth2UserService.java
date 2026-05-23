@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,14 +52,26 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         String baseNickname;
 
         if (provider == Provider.KAKAO) {
-            providerId = String.valueOf(attributes.get("id"));
+            Object idObj = attributes.get("id");
+            providerId = idObj != null ? idObj.toString() : null;
+
             Map<String, Object> kakaoAccount =
                     (Map<String, Object>) attributes.get("kakao_account");
             Map<String, Object> kakaoProfile =
                     (Map<String, Object>) kakaoAccount.get("profile");
             email = (String) kakaoAccount.get("email");
             baseNickname = (String) kakaoProfile.get("nickname");
-        } else { // GOOGLE
+
+            // 이메일 동의 여부 확인
+            Boolean emailVerified = (Boolean) kakaoAccount.get("is_email_verified");
+            if (!Boolean.TRUE.equals(emailVerified)) {
+                throw new OAuth2AuthenticationException(
+                        new OAuth2Error("email_not_provided"),
+                        "카카오 이메일 동의가 필요합니다. 다시 로그인 후 이메일 제공에 동의해주세요."
+                );
+            }
+            email = (String) kakaoAccount.get("email");
+        } else { // GOOGLE / 구글은 이메일 동의 체크박스가 없음 무조건 제공됨
             providerId = (String) attributes.get("sub");
             email = (String) attributes.get("email");
             baseNickname = (String) attributes.get("name");

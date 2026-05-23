@@ -35,7 +35,7 @@ public class User extends BaseEntity {
         this.id = UuidV7Generator.generateIfAbsent(this.id);
     }
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String email;
 
     @Column(nullable = false, length = 30)
@@ -124,6 +124,11 @@ public class User extends BaseEntity {
     // 계정 비활성화 (본인 탈퇴)
     public void deactivate() {
         this.status = UserStatus.INACTIVE;
+    }
+
+    // 계정 재활성화 (탈퇴 후 재가입)
+    public void reactivate() {
+        this.status = UserStatus.ACTIVE;
     }
 
     // 계정 정지 (관리자)

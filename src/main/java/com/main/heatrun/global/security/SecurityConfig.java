@@ -5,6 +5,7 @@ import com.main.heatrun.global.security.handler.AuthAccessDeniedHandler;
 import com.main.heatrun.global.security.handler.AuthEntryPoint;
 import com.main.heatrun.global.security.jwt.JwtFilter;
 import com.main.heatrun.global.security.jwt.JwtProvider;
+import com.main.heatrun.global.security.oauth2.OAuth2FailureHandler;
 import com.main.heatrun.global.security.oauth2.OAuth2SuccessHandler;
 import com.main.heatrun.global.security.oauth2.OAuth2UserService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final OAuth2UserService oAuth2UserService;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final AuthEntryPoint authEntryPoint;
     private final AuthAccessDeniedHandler authAccessDeniedHandler;
@@ -76,6 +78,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(oAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oAuth2FailureHandler)
                 )
 
                 // 예외 처리
