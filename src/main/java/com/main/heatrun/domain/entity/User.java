@@ -4,6 +4,7 @@ import com.main.heatrun.global.base.BaseEntity;
 import com.main.heatrun.global.base.UuidV7Generator;
 import com.main.heatrun.global.enums.LocationShareScope;
 import com.main.heatrun.global.enums.Provider;
+import com.main.heatrun.global.enums.UserRole;
 import com.main.heatrun.global.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -75,6 +76,10 @@ public class User extends BaseEntity {
     @Column(name = "fcm_token", length = 500)
     private String fcmToken;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
+
 
     // 정적 팩토리 메서드
     public static User createLocalUser(String email, String nickname, String encodedPassword) {
@@ -134,6 +139,14 @@ public class User extends BaseEntity {
     // FCM 토큰 업데이트
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    public boolean isAdmin() {
+        return this.role == UserRole.ADMIN;
+    }
+
+    public void assignRole(UserRole role) {
+        this.role = role;
     }
 
 

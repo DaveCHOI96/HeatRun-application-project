@@ -8,6 +8,7 @@ import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.entity.UserLevel;
 import com.main.heatrun.domain.repository.UserLevelRepository;
 import com.main.heatrun.domain.repository.UserRepository;
+import com.main.heatrun.global.enums.UserRole;
 import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.security.jwt.JwtProvider;
 import com.main.heatrun.global.util.NicknameGenerator;
@@ -31,45 +32,81 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final NicknameGenerator nicknameGenerator;
 
-    // 회원가입
+    // 회원가입 // 소셜 회원가입 및 로그인만 가능으로 변경
+//    @Transactional
+//    public TokenResponse register(RegisterRequest request) {
+//
+//        // 이메일 중복 체크
+//        if (userRepository.existsByEmail(request.email())) {
+//            throw new BusinessException("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT);
+//        }
+//
+//        // 닉네임 유니크 생성
+//        String uniqueNickname = nicknameGenerator.generate(request.nickname());
+//
+//        // 비밀번호 암호화
+//        String encodedPassword = passwordEncoder.encode(request.password());
+//
+//        // 유저 생성 + 저장
+//        User user = User.createLocalUser(
+//                request.email(),
+//                uniqueNickname,
+//                encodedPassword
+//        );
+//        userRepository.save(user);
+//
+//        // 유저 레벨 초기화 (회원가입 시 자동 생성)
+//        UserLevel userLevel = UserLevel.create(user);
+//        userLevelRepository.save(userLevel);
+//
+//        // JWT 발급
+//        String accessToken = jwtProvider.generateAccessToken(user);
+//        String refreshToken = jwtProvider.generateRefreshToken(user);
+//
+//        log.info("회원가입 완료: {} (닉네임: {})", user.getEmail(), uniqueNickname);
+//
+//        return new TokenResponse(
+//                accessToken,
+//                refreshToken,
+//                user.getNickname(),
+//                user.getEmail()
+//        );
+//    }
+    // 관리자 전용 로컬 계정 생성
     @Transactional
-    public TokenResponse register(RegisterRequest request) {
+    public TokenResponse createAdminUser(RegisterRequest request, User currentUser) {
+        // 관리자만 생성 가능
+        if (!currentUser.isAdmin()) {
+            throw new BusinessException("관리자만 계정을 생성할 수 있습니다.", HttpStatus.FORBIDDEN);
+        }
 
-        // 이메일 중복 체크
-        if (userRepository.existsByEmail(request.email())) {
+        // LOCAL 이메일 중복 체크
+        if (userRepository.existsLocalUserByEmail(request.email())) {
             throw new BusinessException("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT);
         }
 
-        // 닉네임 유니크 생성
         String uniqueNickname = nicknameGenerator.generate(request.nickname());
-
-        // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.password());
 
-        // 유저 생성 + 저장
         User user = User.createLocalUser(
                 request.email(),
                 uniqueNickname,
                 encodedPassword
         );
+
+        // role을 ADMIN으로 설정
+        user.assignRole(UserRole.ADMIN);
+
         userRepository.save(user);
+        userLevelRepository.save(UserLevel.create(user));
 
-        // 유저 레벨 초기화 (회원가입 시 자동 생성)
-        UserLevel userLevel = UserLevel.create(user);
-        userLevelRepository.save(userLevel);
-
-        // JWT 발급
         String accessToken = jwtProvider.generateAccessToken(user);
         String refreshToken = jwtProvider.generateRefreshToken(user);
 
-        log.info("회원가입 완료: {} (닉네임: {})", user.getEmail(), uniqueNickname);
+        log.info("관리자 계정 생성: {}", user.getEmail());
 
         return new TokenResponse(
-                accessToken,
-                refreshToken,
-                user.getNickname(),
-                user.getEmail()
-        );
+                accessToken, refreshToken, user.getNickname(), user.getEmail());
     }
 
     // 로그인

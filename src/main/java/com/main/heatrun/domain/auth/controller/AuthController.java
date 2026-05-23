@@ -23,12 +23,21 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 회원가입
-    @PostMapping("/register")
-    public ResponseEntity<TokenResponse> register(@Validated @RequestBody RegisterRequest request) {
+//    // 회원가입
+//    @PostMapping("/register")
+//    public ResponseEntity<TokenResponse> register(@Validated @RequestBody RegisterRequest request) {
+//        return ResponseEntity
+//                .status(HttpStatus.CREATED)
+//                .body(authService.register(request));
+//    }
+
+    // 관리자 전용 계정 생성 API
+    @PostMapping("/admin/create-account")
+    public ResponseEntity<TokenResponse> createAdminAccount(
+            @AuthenticationPrincipal User currentUser, @Validated @RequestBody RegisterRequest request) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(authService.register(request));
+                .body(authService.createAdminUser(request, currentUser));
     }
 
     // 로그인
