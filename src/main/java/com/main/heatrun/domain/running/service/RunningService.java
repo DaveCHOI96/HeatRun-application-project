@@ -210,13 +210,19 @@ public class RunningService {
                         userId, RecordType.PERSONAL_BEST)
                 .ifPresentOrElse(
                         existingPb -> {
-                            // 기존 PB보다 빠르면 갱신
-                            if (session.getAvgPace() < existingPb.getDurationSeconds()
-                                / (existingPb.getTotalDistanceKm() * 60)) {
-                                existingPb.makePrivate();
+                            // 기존 PB보다 빠르면 갱신 // 단위 불일치
+//                            if (session.getAvgPace() < existingPb.getDurationSeconds()
+//                                / (existingPb.getTotalDistanceKm() * 60)) {
+//                                existingPb.makePrivate();
+//                                ghostRecordRepository.save(
+//                                        GhostRecord.createPersonalBest(
+//                                                session.getUser(), session));
+//                                log.info("PB 갱신: userId={}", userId);
+//                            }
+                            double existingPbPace = existingPb.getDurationSeconds() / existingPb.getTotalDistanceKm();
+                            if (session.getAvgPace() < existingPbPace) {
                                 ghostRecordRepository.save(
-                                        GhostRecord.createPersonalBest(
-                                                session.getUser(), session));
+                                        GhostRecord.createPersonalBest(session.getUser(), session));
                                 log.info("PB 갱신: userId={}", userId);
                             }
                         },
