@@ -2,10 +2,7 @@ package com.main.heatrun.domain.running.service;
 
 import com.main.heatrun.domain.entity.*;
 import com.main.heatrun.domain.repository.*;
-import com.main.heatrun.domain.running.dto.CompleteRunningRequest;
-import com.main.heatrun.domain.running.dto.RoutePointRequest;
-import com.main.heatrun.domain.running.dto.RunningSessionResponse;
-import com.main.heatrun.domain.running.dto.StartRunningRequest;
+import com.main.heatrun.domain.running.dto.*;
 import com.main.heatrun.global.enums.ExpSourceType;
 import com.main.heatrun.global.enums.RecordType;
 import com.main.heatrun.global.enums.RunningStatus;
@@ -170,19 +167,36 @@ public class RunningService {
         return RunningSessionResponse.from(findMySession(userId, sessionId));
     }
 
-    // GPS 경로 조회 (고스트 재현용)
+    // GPS 경로 조회 (고스트 재현용) 본인 세션 확인 + Response DTO + 프라이버시 존 필터링
     @Transactional(readOnly = true)
-    public List<RoutePointRequest> getRoutePoints(UUID sessionId) {
+    public List<RoutePointResponse> getRoutePoints(UUID userId, UUID sessionId) {
+
+        // 본인 세션인지 확인
+        RunningSession session = runningSessionRepository
+                .findById(sessionId)
+                .orElseThrow(() -> new BusinessException("러닝 세션을 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new BusinessException("접근 권한이 없습니다.", HttpStatus.FORBIDDEN);
+        }
+
+        // 프라이버시 존 필터링
+        User user = findActiveUser(userId);
+        Point privacyZone = user.getPrivacyZonePoint();
+        Integer radius = user.getPrivacyZoneRadius();
+
         return routePointRepository
                 .findBySessionIdOrderBySequenceNumberAsc(sessionId)
                 .stream()
-                .map(point -> new RoutePointRequest(
-                        point.getLocation().getY(),
-                        point.getLocation().getX(),
-                        point.getAltitude(),
-                        point.getSpeed(),
-                        point.getSequenceNumber()
-                ))
+                .filter(point -> {
+                    // 프라이버시 존 설정 없으면 전체 반환
+                    if (privacyZone == null) return true;
+
+                    // 프라이버시 존 반경 내 좌표 제외
+                    double distance = privacyZone.distance(point.getLocation());
+                    return distance > radius;
+                })
+                .map(RoutePointResponse::from)
                 .collect(Collectors.toList());
     }
 

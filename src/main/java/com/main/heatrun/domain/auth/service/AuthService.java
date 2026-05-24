@@ -193,7 +193,7 @@ public class AuthService {
 
     // 로그아웃
     @Transactional
-    public void logout(UUID userId) {
+    public void logout(UUID userId, String accessToken) {
 
         // Redis에서 리프레시 토큰 삭제
         jwtProvider.deleteRefreshToken(userId);

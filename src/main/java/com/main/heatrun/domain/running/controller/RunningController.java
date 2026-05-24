@@ -1,10 +1,7 @@
 package com.main.heatrun.domain.running.controller;
 
 import com.main.heatrun.domain.entity.User;
-import com.main.heatrun.domain.running.dto.CompleteRunningRequest;
-import com.main.heatrun.domain.running.dto.RoutePointRequest;
-import com.main.heatrun.domain.running.dto.RunningSessionResponse;
-import com.main.heatrun.domain.running.dto.StartRunningRequest;
+import com.main.heatrun.domain.running.dto.*;
 import com.main.heatrun.domain.running.service.RunningService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -79,9 +76,9 @@ public class RunningController {
 
     // GPS 경로 조회 (고스트 재현용)
     @GetMapping("/{sessionId}/route-points")
-    public ResponseEntity<List<RoutePointRequest>> getRoutePoints(
-            @PathVariable UUID sessionId) {
-        return ResponseEntity.ok(runningService.getRoutePoints(sessionId));
+    public ResponseEntity<List<RoutePointResponse>> getRoutePoints(
+            @AuthenticationPrincipal User user, @PathVariable UUID sessionId) {
+        return ResponseEntity.ok(runningService.getRoutePoints(user.getId(), sessionId));
     }
 
 }

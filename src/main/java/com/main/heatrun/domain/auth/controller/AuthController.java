@@ -11,10 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -55,8 +52,11 @@ public class AuthController {
 
     // 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@AuthenticationPrincipal User user) {
-        authService.logout(user.getId());
+    public ResponseEntity<Void> logout(
+            @AuthenticationPrincipal User user,
+            @RequestHeader("Authorization") String authHeader) {
+        String accessToken = authHeader.substring(7);
+        authService.logout(user.getId(), accessToken);
         return ResponseEntity.ok().build();
     }
 }
