@@ -194,10 +194,11 @@ public class RunningService {
         ExpLog expLog = ExpLog.of(user, expEarned, sourceType,sourceId);
         expLogRepository.save(expLog);
 
-        // 유저 레벨 업데이트
-        userLevelRepository.findByUserId(userId)
-                .ifPresent(level -> level.addExp(expEarned));
-
+        // 유저 레벨 업데이트 (UserLevel 없으면 예외 발생 처리[수정])
+        UserLevel level = userLevelRepository.findByUserId(userId)
+                        .orElseThrow(() -> new BusinessException(
+                                "레벨 정보를 찾을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+        level.addExp(expEarned);
         log.info("EXP 지급: userId={}, exp={}, source={}", userId, expEarned, sourceType);
     }
 
