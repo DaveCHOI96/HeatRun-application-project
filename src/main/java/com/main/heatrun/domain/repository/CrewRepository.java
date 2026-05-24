@@ -24,6 +24,7 @@ public interface CrewRepository extends JpaRepository<Crew, UUID> {
     // 공개 크루 검색 - 이름 검색(페이징)
     @Query("""
            SELECT c FROM Crew c
+           JOIN FETCH c.leaderUser
            WHERE c.visibility = 'PUBLIC'
            AND c.name LIKE %:keyword%
            ORDER BY c.memberCount DESC
