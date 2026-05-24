@@ -106,7 +106,7 @@ public class AuthService {
         log.info("관리자 계정 생성: {}", user.getEmail());
 
         return new TokenResponse(
-                accessToken, refreshToken, user.getNickname(), user.getEmail());
+                user.getId(), accessToken, refreshToken, user.getNickname(), user.getEmail());
     }
 
     // 로그인
@@ -138,6 +138,7 @@ public class AuthService {
         log.info("로그인 완료: {}", user.getEmail());
 
         return new TokenResponse(
+                user.getId(),
                 accessToken,
                 refreshToken,
                 user.getNickname(),
@@ -184,6 +185,7 @@ public class AuthService {
         log.info("토큰 재발급 완료: {}", user.getEmail());
 
         return new TokenResponse(
+                user.getId(),
                 newAccessToken,
                 newRefreshToken,
                 user.getNickname(),

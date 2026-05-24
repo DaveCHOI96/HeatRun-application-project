@@ -1,5 +1,7 @@
 package com.main.heatrun.global.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,6 +36,18 @@ public class GlobalExceptionHandler {
                 .body(Map.of(
                         "status", 400,
                         "message", message
+                ));
+    }
+
+    // 크루 이름 중복 에러
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityException(
+            DataIntegrityViolationException e) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "status", 409,
+                        "message", "이미 사용 중인 데이터입니다."
                 ));
     }
 
