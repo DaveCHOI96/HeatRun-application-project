@@ -47,6 +47,18 @@ public interface HeatmapTileRepository extends JpaRepository<HeatmapTile, Long> 
             @Param("minY") Integer minY,
             @Param("maxY") Integer maxY);
 
+    // 히트맵 통계 DB집계
+    @Query("""
+           SELECT
+                COUNT(ht),
+                SUM(ht.visitCount),
+                SUM(CASE WHEN ht.isRunning = true THEN 1 ELSE 0 END),
+                SUM(CASE WHEN ht.isRunning = false THEN 1 ELSE 0 END)
+           FROM HeatmapTile ht
+           WHERE ht.user.id = :userId
+           """)
+    List<Object[]> getStatsByUserId(@Param("userId") UUID userId);
+
     // 유저의 총 타일 수 - 탐험 통계
     long countByUserId(UUID userId);
 }

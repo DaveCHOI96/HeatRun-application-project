@@ -115,28 +115,21 @@ public class HeatmapService {
     }
 
     // 히트맵 통계
-    @Transactional
-    public HeatmapStatsResponse getMyHeatmapStatus(UUID userId) {
-        List<HeatmapTile> allTiles = heatmapTileRepository
-                .findAll()
-                .stream()
-                .filter(tile -> tile.getUser().getId().equals(userId))
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public HeatmapStatsResponse getMyHeatmapStats(UUID userId) {
+        List<Object[]> result = heatmapTileRepository
+                .getStatsByUserId(userId);
 
-        long totalTiles = allTiles.size();
-        long runningTiles = allTiles.stream()
-                .filter(HeatmapTile::getIsRunning)
-                .count();
-        long walkingTiles = totalTiles - runningTiles;
-        long totalVisitCount = allTiles.stream()
-                .mapToLong(HeatmapTile::getVisitCount)
-                .sum();
+        if (result.isEmpty() || result.get(0)[0] == null) {
+            return new HeatmapStatsResponse(0L, 0L, 0L, 0L);
+        }
 
+        Object[] row = result.get(0);
         return new HeatmapStatsResponse(
-                totalTiles,
-                runningTiles,
-                walkingTiles,
-                totalVisitCount
+                ((Long) row[0]), // totalTiles
+                ((Long) row[2]), // runningTiles
+                ((Long) row[3]), // walkingTiles
+                ((Long) row[1])  // totalVisitCount
         );
     }
 

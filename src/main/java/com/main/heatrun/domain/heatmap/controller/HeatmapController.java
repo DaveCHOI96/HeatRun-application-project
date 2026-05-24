@@ -58,6 +58,6 @@ public class HeatmapController {
     @GetMapping("/me/stats")
     public ResponseEntity<HeatmapStatsResponse> getMyHeatmapStats(
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(heatmapService.getMyHeatmapStatus(user.getId()));
+        return ResponseEntity.ok(heatmapService.getMyHeatmapStats(user.getId()));
     }
 }
