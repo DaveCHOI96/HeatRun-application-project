@@ -12,6 +12,6 @@ public record LocationMessage(
         Double longitude,
         Double speed,
         String status,  // RUNNING / PAUSED / STOPPED
-        LocalDateTime timestamp
+        String timestamp // ISO 8601 문자열로 직렬화
 ) {
 }

@@ -1,9 +1,11 @@
 package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.Crew;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,4 +34,8 @@ public interface CrewRepository extends JpaRepository<Crew, UUID> {
     
     // 유저가 리더인 크루 목록
     List<Crew> findByLeaderUserId(UUID userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM Crew c WHERE c.id = :crewId")
+    Optional<Crew> findByIdWithLock(@Param("crewId") UUID crewId);
 }

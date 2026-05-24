@@ -108,7 +108,10 @@ public class CrewService {
     @Transactional
     public CrewResponse joinCrew(UUID userId, UUID crewId) {
         User user = findActiveUser(userId);
-        Crew crew = findCrew(crewId);
+
+        // 비관적 잠금으로 동시 접근 방지
+        Crew crew = crewRepository.findByIdWithLock(crewId)
+                .orElseThrow(() -> new BusinessException("크루를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         // 이미 가입된 크루인지 확인
         if (crewMemberRepository.existsByCrewIdAndUserId(crewId, userId)) {

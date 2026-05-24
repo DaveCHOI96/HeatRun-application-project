@@ -1,6 +1,5 @@
 package com.main.heatrun.domain.entity;
 
-import com.main.heatrun.global.base.BaseTimeEntity;
 import com.main.heatrun.global.base.UuidV7Generator;
 import com.main.heatrun.global.enums.Visibility;
 import jakarta.persistence.*;
@@ -47,6 +46,10 @@ public class Crew {
     // 현재 인원 - 가입/탈퇴 시 업데이트
     @Column(name = "member_count", nullable = false)
     private Integer memberCount = 1;
+
+    // 낙관적 잠금 추가
+    @Version
+    private Long version;
 
     public static Crew create(User leader, String name,
                               String description, Visibility visibility) {

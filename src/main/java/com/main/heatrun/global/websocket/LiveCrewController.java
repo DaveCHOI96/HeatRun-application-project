@@ -61,7 +61,7 @@ public class LiveCrewController {
                 request.longitude(),
                 request.speed(),
                 request.status(),
-                LocalDateTime.now()
+                LocalDateTime.now().toString() // ISO 8601 문자열
         );
 
         // Redis Pub/Sub 으로 발행 -> 모든 서버로 브로드캐스트
