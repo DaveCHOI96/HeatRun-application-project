@@ -2,6 +2,8 @@ package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.RunningSession;
 import com.main.heatrun.global.enums.RunningStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +16,8 @@ public interface RunningSessionRepository extends JpaRepository<RunningSession, 
 
     // 유저의 러닝 세션 목록 -> 최신순 (히트맵 이력)
     List<RunningSession> findByUserIdOrderByStartedAtDesc(UUID userId);
+
+    Page<RunningSession> findByUserIdOrderByStartedAtDesc(UUID userId, Pageable pageable);
 
     // 유저의 진행중인 세션 - 중복 러닝 방지
     Optional<RunningSession> findByUserIdAndStatus(

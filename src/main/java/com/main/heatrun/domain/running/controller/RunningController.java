@@ -3,7 +3,10 @@ package com.main.heatrun.domain.running.controller;
 import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.running.dto.*;
 import com.main.heatrun.domain.running.service.RunningService;
+import com.main.heatrun.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -62,9 +65,11 @@ public class RunningController {
 
     // 러닝 기록 목록 조회
     @GetMapping
-    public ResponseEntity<List<RunningSessionResponse>> getMyRunningSessions(
-            @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(runningService.getMyRunningSessions(user.getId()));
+    public ResponseEntity<PageResponse<RunningSessionResponse>> getMyRunningSessions(
+            @AuthenticationPrincipal User user, @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(
+                PageResponse.from(runningService.getMyRunningSessions(
+                        user.getId(), pageable)));
     }
 
     // 러닝 상세 조회

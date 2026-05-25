@@ -13,6 +13,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -153,12 +155,10 @@ public class RunningService {
 
     // 러닝 기록 조회
     @Transactional(readOnly = true)
-    public List<RunningSessionResponse> getMyRunningSessions(UUID userId) {
+    public Page<RunningSessionResponse> getMyRunningSessions(UUID userId, Pageable pageable) {
         return runningSessionRepository
-                .findByUserIdOrderByStartedAtDesc(userId)
-                .stream()
-                .map(RunningSessionResponse::from)
-                .collect(Collectors.toList());
+                .findByUserIdOrderByStartedAtDesc(userId, pageable)
+                .map(RunningSessionResponse::from);
     }
 
     // 러닝 상세 조회
