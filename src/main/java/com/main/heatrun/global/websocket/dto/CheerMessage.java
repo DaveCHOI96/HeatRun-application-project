@@ -11,6 +11,6 @@ public record CheerMessage(
         String senderNickname,
         UUID receiverId,
         CheerType cheerType,
-        LocalDateTime timestamp
+        String timestamp
 ) {
 }

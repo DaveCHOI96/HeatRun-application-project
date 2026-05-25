@@ -125,7 +125,7 @@ public class LiveCrewController {
                 sender.getNickname(),
                 receiverId,
                 null, // CheerType은 REST API에서 처리
-                LocalDateTime.now()
+                LocalDateTime.now().toString()
         );
 
         // 수신자에게만 개인 메시지 전송
@@ -155,7 +155,7 @@ public class LiveCrewController {
                 user.getProfileImageUrl(),
                 null, null, null,
                 "STOPPED",
-                LocalDateTime.now()
+                LocalDateTime.now().toString()
         );
 
         redisPublisher.publishLocation(crewId, message);
