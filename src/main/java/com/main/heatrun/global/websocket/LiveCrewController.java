@@ -8,8 +8,10 @@ import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.websocket.dto.CheerMessage;
 import com.main.heatrun.global.websocket.dto.LocationMessage;
 import com.main.heatrun.global.websocket.dto.LocationRequest;
+import com.main.heatrun.global.websocket.dto.WsCheerRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Controller
@@ -32,6 +35,10 @@ public class LiveCrewController {
     private final CrewMemberRepository crewMemberRepository;
     private final RedisWebSocketPublisher redisPublisher;
     private final LocationCacheService locationCacheService;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    // 응원 제한 10분
+    private static final long CHEER_LIMIT_SECONDS = 600;
 
     // 실시간 위치 전송
     // 클라이언트 -> /app/location/{crewId}
@@ -69,9 +76,6 @@ public class LiveCrewController {
         redisPublisher.publishLocation(crewId, message);
 
         // 크루 전체에게 브로드캐스트
-//        messagingTemplate.convertAndSend("/topic/crew/" + crewId + "/location", message);
-//        log.debug("위치 전송: userId={}, crewId={}, lat={}, lng={}",
-//                userId, crewId, request.latitude(), request.longitude());
     }
 
     // 크루 현재 위치 목록 조회
@@ -104,10 +108,12 @@ public class LiveCrewController {
     // 개인 메시지 -> /user/{receiverId}/queue/cheer
     @MessageMapping("/cheer/{crewId}/{receiverId}")
     public void sendCheer(
-            @DestinationVariable UUID crewId, @DestinationVariable UUID receiverId,
+            @DestinationVariable UUID crewId,
+            @DestinationVariable UUID receiverId,
+            @Payload WsCheerRequest request,
             SimpMessageHeaderAccessor headerAccessor) {
+
         UUID senderId = extractUserId(headerAccessor);
-        User sender = findUser(senderId);
 
         // 자기 자신에게 응원 불가
         if (senderId.equals(receiverId)) {
@@ -119,12 +125,25 @@ public class LiveCrewController {
                !crewMemberRepository.existsByCrewIdAndUserId(crewId, receiverId)) {
             return;
         }
+        // Redis 기반 10분 제한
+        // 같은 senderId -> receiverId 조합은 10분에 1번만 가능
+        String rateLimitKey = "cheer:rate:" + senderId + ":" + receiverId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(rateLimitKey))) {
+            log.warn("응원 제한: senderId={}, receiverId={}", senderId, receiverId);
+            return;
+        }
+        redisTemplate.opsForValue().set(
+                rateLimitKey, "1",
+                CHEER_LIMIT_SECONDS, TimeUnit.SECONDS
+        );
+
+        User sender = findUser(senderId);
 
         CheerMessage message = new CheerMessage(
                 senderId,
                 sender.getNickname(),
                 receiverId,
-                null, // CheerType은 REST API에서 처리
+                request.cheerType(), // null 대신 실제 값 수정
                 LocalDateTime.now().toString()
         );
 
