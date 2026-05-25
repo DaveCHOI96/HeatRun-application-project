@@ -42,7 +42,7 @@ public class JwtFilter extends OncePerRequestFilter {
             UUID userId = jwtProvider.getUserId(token);
 
             // 3. 블랙리스트 체크 (강제 로그아웃 / 계정 정지)
-            if (jwtProvider.isBlacklisted(userId)) {
+            if (jwtProvider.isBlacklisted(token, userId)) {
                 log.warn("블랙리스트 유저 접근 차단: {}", userId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                         "접근이 차단된 계정입니다.");

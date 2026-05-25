@@ -12,6 +12,7 @@ public record CrewResponse(
         String visibility,
         Integer maxMembers,
         Integer memberCount,
+        UUID leaderUserId,
         String leaderNickname
 ) {
     public static CrewResponse from(Crew crew) {
@@ -22,6 +23,7 @@ public record CrewResponse(
                 crew.getVisibility().name(),
                 crew.getMaxMembers(),
                 crew.getMemberCount(),
+                crew.getLeaderUser().getId(),
                 crew.getLeaderUser().getNickname()
         );
     }

@@ -202,7 +202,7 @@ public class AuthService {
 
         // 엑세스 토큰 로그아웃시 블랙리스트 추가
         // Redis에서 남아있는 토큰 탈취를 방지 / addBlacklist에서 30분 후 블랙리스트 자동 해제
-        jwtProvider.addBlacklist(accessToken);
+        jwtProvider.addTokenBlacklist(accessToken);
 
         log.info("로그아웃 완료: {}", userId);
     }

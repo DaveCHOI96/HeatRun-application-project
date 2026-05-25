@@ -101,13 +101,6 @@ public class JwtProvider {
         return false;
     }
 
-    //  블랙리스트 체크 (강제 로그아웃 / 계정 정지)
-    public boolean isBlacklisted(UUID userId) {
-        // Redis에 "blacklist:{userId}" 키가 있는지 확인
-        Boolean result = redisTemplate.hasKey(getBlacklistKey(userId));
-        return result != null && result;
-    }
-
     // Claims 추출
     public Claims getClaims(String token) {
         return Jwts.parser()
@@ -136,19 +129,60 @@ public class JwtProvider {
     // 블랙리스트 등록(강제 로그아웃 / 계정 정지)
     public void addBlacklist(UUID userId) {
         redisTemplate.opsForValue().set(
-                getBlacklistKey(userId),
+                getUserBlacklistKey(userId),
                 "banned",
                 jwtProperties.getAccessTokenExpiration(), // 액세스 토큰 만료시간만큼
                 TimeUnit.MILLISECONDS
         );
     }
 
-    // Redis Key 네이밍
+    // 토큰 자체를 키로 쓰는 블랙리스트 - 로그아웃 시 해당 토큰만 차단
+    public void addTokenBlacklist(String accessToken) {
+        long remaining = getRemainingExpiry(accessToken);
+        if (remaining > 0) {
+            redisTemplate.opsForValue().set(
+                    getTokenBlacklistKey(accessToken),
+                    "logout",
+                    remaining,
+                    TimeUnit.MILLISECONDS
+            );
+        }
+    }
+
+    //  블랙리스트 체크 (강제 로그아웃 / 계정 정지)
+    public boolean isBlacklisted(String accessToken, UUID userId) {
+        Boolean tokenBlocked = redisTemplate.hasKey(getTokenBlacklistKey(accessToken));
+        Boolean userBlocked = redisTemplate.hasKey(getUserBlacklistKey(userId));
+        return (tokenBlocked != null && tokenBlocked) || (userBlocked != null && userBlocked);
+
+    }
+
+    // Access Token 남은 만료 시간 반환
+    public long getRemainingExpiry(String accessToken) {
+        try {
+            Date expiration = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(accessToken)
+                    .getPayload()
+                    .getExpiration();
+            long remaining = expiration.getTime()
+                    - System.currentTimeMillis();
+            return Math.max(remaining, 0);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     private String getRefreshKey(UUID userId) {
         return "refresh:" + userId;
     }
 
-    private String getBlacklistKey(UUID userId) {
-        return "blacklist:" + userId;
+    private String getUserBlacklistKey(UUID userId) {
+        return "blacklist:user:" + userId;
+    }
+
+    private String getTokenBlacklistKey(String accessToken) {
+        return "blacklist:token:" + accessToken;
     }
 }

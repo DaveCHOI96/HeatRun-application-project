@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,32 +39,34 @@ public class HeatmapService {
     @Transactional
     public void updateHeatmap(UUID userId, UpdateHeatmapRequest request) {
         User user = findActiveUser(userId);
-        
-        // GPS 좌표 목록 -> 타일로 변환 후 저장
-        request.coordinates().forEach(coord -> {
-            int tileX = tileConverter.longitudeToTileX(
-                    coord.longitude(), request.zoomLevel());
-            int tileY = tileConverter.latitudeToTileY(
-                    coord.latitude(), request.zoomLevel());
 
-            // 기존 타일 있으면 방문 횟수 증가
-            // 없으면 신규 생성 (upsert 방식)
-            heatmapTileRepository
+        List<HeatmapTile> tilesToSave = new ArrayList<>();
+
+        for (UpdateHeatmapRequest.GpsCoordinate coord : request.coordinates()) {
+
+            int tileX = tileConverter.longitudeToTileX(coord.longitude(), request.zoomLevel());
+            int tileY = tileConverter.latitudeToTileY(coord.latitude(), request.zoomLevel());
+
+            HeatmapTile tile = heatmapTileRepository
                     .findByUserIdAndTileXAndTileYAndZoomLevel(
                             userId, tileX, tileY, request.zoomLevel())
-                    .ifPresentOrElse(
-                            HeatmapTile::increaseVisit, // 기존 타일 업데이트
-                            () -> heatmapTileRepository.save(
-                                    HeatmapTile.create(
-                                            user,
-                                            tileX,
-                                            tileY,
-                                            request.zoomLevel(),
-                                            request.isRunning()
-                                    )
-                            )
-                    );
-        });
+                    .orElse(null);
+            if (tile == null) {
+                // 신규 타일 - visitCount 기본값 1 유지
+                tilesToSave.add(HeatmapTile.create(
+                        user, tileX, tileY,
+                        request.zoomLevel(),
+                        request.isRunning()));
+            } else {
+                // 기존 타일 - 방문 횟수 증가
+                tile.increaseVisit();
+                tilesToSave.add(tile);
+            }
+        }
+        // 배치 저장
+        if (!tilesToSave.isEmpty()) {
+            heatmapTileRepository.saveAll(tilesToSave);
+        }
         log.info("히트맵 업데이트: userId={}, tiles={}", userId, request.coordinates().size());
     }
 

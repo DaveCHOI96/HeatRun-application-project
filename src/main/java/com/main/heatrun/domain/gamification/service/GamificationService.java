@@ -101,7 +101,7 @@ public class GamificationService {
 
         UserTitle userTitle = userTitleRepository
                 .findByUserIdAndTitleId(userId, titleId)
-                .orElseThrow(() -> new BusinessException("=보유하지 않은 칭호입니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException("보유하지 않은 칭호입니다.", HttpStatus.NOT_FOUND));
 
         userTitle.equip();
         log.info("칭호 장착: userId={}, titleId={}", userId, titleId);
