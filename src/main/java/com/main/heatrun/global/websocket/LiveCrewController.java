@@ -186,6 +186,9 @@ public class LiveCrewController {
 
     // WebSocket 세션에서 userId 추출
     private UUID extractUserId(SimpMessageHeaderAccessor headerAccessor) {
+        if (headerAccessor.getUser() == null) {
+            throw new BusinessException("인증되지 않은 WebSocket 요청입니다.", HttpStatus.UNAUTHORIZED);
+        }
         return UUID.fromString(headerAccessor.getUser().getName());
     }
 
