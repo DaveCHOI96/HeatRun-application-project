@@ -6,6 +6,7 @@ import com.main.heatrun.domain.auth.dto.RegisterRequest;
 import com.main.heatrun.domain.auth.dto.TokenResponse;
 import com.main.heatrun.domain.auth.service.AuthService;
 import com.main.heatrun.domain.entity.User;
+import com.main.heatrun.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +56,9 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal User user,
             @RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BusinessException("유효하지 않은 인증 헤더입니다.", HttpStatus.UNAUTHORIZED);
+        }
         String accessToken = authHeader.substring(7);
         authService.logout(user.getId(), accessToken);
         return ResponseEntity.ok().build();
