@@ -54,7 +54,7 @@ public class GamificationService {
     @Transactional(readOnly = true)
     public List<TitleResponse> getAllTitles(UUID userId) {
         // 내가 보유한 칭호 ID 목록
-        List<UserTitle> myTitles = userTitleRepository.findByUserId(userId);
+        List<UserTitle> myTitles = userTitleRepository.findByUserIdWithTitle(userId);
         Set<UUID> earnedTitleIds = myTitles.stream()
                 .map(ut -> ut.getTitle().getId())
                 .collect(Collectors.toSet());

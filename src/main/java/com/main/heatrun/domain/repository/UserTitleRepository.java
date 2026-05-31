@@ -41,4 +41,12 @@ public interface UserTitleRepository extends JpaRepository<UserTitle, Long> {
            AND ut.isEquipped = true
            """)
     List<UserTitle> findEquippedByUserIdWithLock(@Param("userId") UUID userId);
+
+    // JOIN FETCH — UserTitle + Title 한 번에 조
+    @Query("""
+           SELECT ut FROM UserTitle ut
+           JOIN FETCH ut.title
+           WHERE ut.user.id = :userId
+           """)
+    List<UserTitle> findByUserIdWithTitle(@Param("userId") UUID userId);
 }
