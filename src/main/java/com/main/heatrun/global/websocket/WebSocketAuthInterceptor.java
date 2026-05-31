@@ -38,8 +38,8 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 if (jwtProvider.validateToken(token)) {
                     var userId = jwtProvider.getUserId(token);
 
-                    // 블랙리스트 체크
-                    if (jwtProvider.isBlacklisted(userId)) {
+                    // 블랙리스트 체크  2026/05/30 token 추가
+                    if (jwtProvider.isBlacklisted(token, userId)) {
                         log.warn("블랙리스트 유저 WebSocket 접근 차단: {}", userId);
                         throw new IllegalStateException("접근이 차단된 계정입니다.");
                     }

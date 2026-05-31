@@ -38,35 +38,23 @@ public class HeatmapService {
     // 히트맵 타일 업데이트
     @Transactional
     public void updateHeatmap(UUID userId, UpdateHeatmapRequest request) {
-        User user = findActiveUser(userId);
+        findActiveUser(userId);
 
-        List<HeatmapTile> tilesToSave = new ArrayList<>();
-
-        for (UpdateHeatmapRequest.GpsCoordinate coord : request.coordinates()) {
-
+        // upsert 방식으로 변경
+        // 동시 요청 시에도 데이터 유실 없이 원자적 처리
+        request.coordinates().forEach(coord -> {
             int tileX = tileConverter.longitudeToTileX(coord.longitude(), request.zoomLevel());
             int tileY = tileConverter.latitudeToTileY(coord.latitude(), request.zoomLevel());
 
-            HeatmapTile tile = heatmapTileRepository
-                    .findByUserIdAndTileXAndTileYAndZoomLevel(
-                            userId, tileX, tileY, request.zoomLevel())
-                    .orElse(null);
-            if (tile == null) {
-                // 신규 타일 - visitCount 기본값 1 유지
-                tilesToSave.add(HeatmapTile.create(
-                        user, tileX, tileY,
-                        request.zoomLevel(),
-                        request.isRunning()));
-            } else {
-                // 기존 타일 - 방문 횟수 증가
-                tile.increaseVisit();
-                tilesToSave.add(tile);
-            }
-        }
-        // 배치 저장
-        if (!tilesToSave.isEmpty()) {
-            heatmapTileRepository.saveAll(tilesToSave);
-        }
+            heatmapTileRepository.upsertTile(
+                    userId,
+                    tileX,
+                    tileY,
+                    request.zoomLevel(),
+                    request.isRunning()
+            );
+        });
+
         log.info("히트맵 업데이트: userId={}, tiles={}", userId, request.coordinates().size());
     }
 

@@ -38,6 +38,10 @@ public class UserLevel {
     @Column(name = "exp_to_next_level", nullable = false)
     private Integer expToNextLevel = 100;
 
+    // 동시에 EXP 지급 요청 들어올때를 대비해서
+    @Version
+    private Long version;
+
     public static  UserLevel create(User user) {
         UserLevel level = new UserLevel();
         level.user = user;
