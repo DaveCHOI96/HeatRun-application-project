@@ -92,16 +92,20 @@ public class GamificationService {
     // 칭호 장착
     @Transactional
     public void equipTitle(UUID userId, UUID titleId) {
+
+        // 비관적 잠금으로 조회 - 동시 요청 차단
+        List<UserTitle> equippedTitles = userTitleRepository
+                .findEquippedByUserIdWithLock(userId);
+
         // 최대 2개 제한
-        long equippedCount = userTitleRepository
-                .countEquippedTitles(userId);
-        if (equippedCount >= 2) {
+        if (equippedTitles.size() >= 2) {
             throw new BusinessException("칭호는 최대 2개까지 장착 가능합니다.", HttpStatus.BAD_REQUEST);
         }
 
         UserTitle userTitle = userTitleRepository
                 .findByUserIdAndTitleId(userId, titleId)
-                .orElseThrow(() -> new BusinessException("보유하지 않은 칭호입니다.", HttpStatus.NOT_FOUND));
+                        .orElseThrow(() -> new BusinessException(
+                                "보유하지 않은 칭호입니다.", HttpStatus.NOT_FOUND));
 
         userTitle.equip();
         log.info("칭호 장착: userId={}, titleId={}", userId, titleId);

@@ -164,7 +164,9 @@ public class AuthService {
         String storedToken = jwtProvider.getRefreshToken(userId);
         if (storedToken == null || !storedToken.equals(request.refreshToken())) {
             // 탈취된 토큰으로 요청 -> 블랙리스트 등록
+            jwtProvider.deleteRefreshToken(userId);
             jwtProvider.addBlacklist(userId);
+            log.warn("토큰 탈취 의심 감지: userId={}", userId);
             throw new BusinessException("이미 사용한 리프레시 토큰입니다. 다시 로그인해주세요.",
                     HttpStatus.UNAUTHORIZED);
         }

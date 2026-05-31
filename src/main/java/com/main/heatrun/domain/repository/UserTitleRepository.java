@@ -1,7 +1,9 @@
 package com.main.heatrun.domain.repository;
 
 import com.main.heatrun.domain.entity.UserTitle;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,4 +32,13 @@ public interface UserTitleRepository extends JpaRepository<UserTitle, Long> {
            AND ut.isEquipped = true
            """)
     long countEquippedTitles(@Param("userId") UUID userId);
+
+    // 장착된 칭호 비관적 잠금 조회
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+           SELECT ut FROM UserTitle ut
+           WHERE ut.user.id = :userId
+           AND ut.isEquipped = true
+           """)
+    List<UserTitle> findEquippedByUserIdWithLock(@Param("userId") UUID userId);
 }
