@@ -98,7 +98,8 @@ public class CrewService {
     // 크루 멤버 목록
     @Transactional(readOnly = true)
     public List<CrewMemberResponse> getCrewMembers(UUID crewId) {
-        return crewMemberRepository.findByCrewId(crewId)
+        // JOIN FETCH 사용으로 N+1 해소
+        return crewMemberRepository.findByCrewIdWithUser(crewId)
                 .stream()
                 .map(CrewMemberResponse::from)
                 .collect(Collectors.toList());

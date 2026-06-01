@@ -32,4 +32,12 @@ public interface CrewMemberRepository extends JpaRepository<CrewMember, UUID> {
 
     // 크루 멤버 수
     long countByCrewId(UUID crewId);
+
+    // JOIN FETCH - CrewMember + User 한번에 조회
+    @Query("""
+           SELECT cm FROM CrewMember cm
+           JOIN FETCH cm.user
+           WHERE cm.crew.id = :crewId
+           """)
+    List<CrewMember> findByCrewIdWithUser(@Param("crewId") UUID crewId);
 }
