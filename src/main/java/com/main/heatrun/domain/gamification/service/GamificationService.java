@@ -13,6 +13,8 @@ import com.main.heatrun.domain.repository.UserTitleRepository;
 import com.main.heatrun.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,14 +42,12 @@ public class GamificationService {
         return UserLevelResponse.from(level);
     }
 
-    // 경험치 이력 조회
+    // 경험치 이력 조회 (페이지네이션 수정)
     @Transactional(readOnly = true)
-    public List<ExpLogResponse> getExpLogs(UUID userId) {
+    public Page<ExpLogResponse> getExpLogs(UUID userId, Pageable pageable) {
         return expLogRepository
-                .findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(ExpLogResponse::from)
-                .collect(Collectors.toList());
+                .findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(ExpLogResponse::from);
     }
 
     // 전체 칭호 목록 (도감)

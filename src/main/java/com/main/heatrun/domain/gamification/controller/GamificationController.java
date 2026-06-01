@@ -6,7 +6,11 @@ import com.main.heatrun.domain.gamification.dto.TitleResponse;
 import com.main.heatrun.domain.gamification.dto.UserLevelResponse;
 import com.main.heatrun.domain.gamification.dto.UserTitleResponse;
 import com.main.heatrun.domain.gamification.service.GamificationService;
+import com.main.heatrun.global.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +31,12 @@ public class GamificationController {
         return ResponseEntity.ok(gamificationService.getMyLevel(user.getId()));
     }
 
-    // 경험치 획득 이력
+    // 경험치 획득 이력 (Pageable 수정)
     @GetMapping("/exp-logs")
-    public ResponseEntity<List<ExpLogResponse>> getExpLogs(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(gamificationService.getExpLogs(user.getId()));
+    public ResponseEntity<PageResponse<ExpLogResponse>> getExpLogs(
+            @AuthenticationPrincipal User user,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(PageResponse.from(gamificationService.getExpLogs(user.getId(), pageable)));
     }
 
     // 전체 칭호 목록 (도감)
