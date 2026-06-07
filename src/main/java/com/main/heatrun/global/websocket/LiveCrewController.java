@@ -51,13 +51,14 @@ public class LiveCrewController {
 
         //WebSocket 세션에서 userId 추출
         UUID userId = extractUserId(headerAccessor);
-        User user = findUser(userId);
 
-        // 크루 멤버인지 확인
+        // 크루 멤버인지 확인 (멤버확인 먼저 비멤버면 User 조회 생략)
         if (!crewMemberRepository.existsByCrewIdAndUserId(crewId, userId)) {
-            log.warn("크루 비멤버 위치 전송 시도: userId={}, crewId={}", userId, crewId);
+            log.warn("크루 비멤버 위치 전송 시도: userId={}", userId);
             return;
         }
+
+        User user = findUser(userId);
 
         // 위치 메시지 생성
         LocationMessage message = new LocationMessage(
@@ -132,10 +133,6 @@ public class LiveCrewController {
             log.warn("응원 제한: senderId={}, receiverId={}", senderId, receiverId);
             return;
         }
-        redisTemplate.opsForValue().set(
-                rateLimitKey, "1",
-                CHEER_LIMIT_SECONDS, TimeUnit.SECONDS
-        );
 
         User sender = findUser(senderId);
 
@@ -147,13 +144,22 @@ public class LiveCrewController {
                 LocalDateTime.now().toString()
         );
 
-        // 수신자에게만 개인 메시지 전송
-        messagingTemplate.convertAndSendToUser(
-                receiverId.toString(),
-                "/queue/cheer",
-                message
-        );
-        log.info("응원 WebSocket 전송: from={}, to={}", senderId, receiverId);
+        // 전송 성공 후 Redis 키 설정
+        try {
+            messagingTemplate.convertAndSendToUser(
+                    receiverId.toString(),
+                    "/queue/cheer",
+                    message
+            );
+            redisTemplate.opsForValue().set(
+                    rateLimitKey, "1",
+                    CHEER_LIMIT_SECONDS, TimeUnit.SECONDS
+            );
+        } catch (Exception e) {
+            log.error("WebSocket 응원 전송 실패: {}", e.getMessage());
+        }
+
+        log.info("응원 WebSocket 전송: from={}, to={}, type={}", senderId, receiverId, request.cheerType());
     }
 
     // 러닝 종료 알림

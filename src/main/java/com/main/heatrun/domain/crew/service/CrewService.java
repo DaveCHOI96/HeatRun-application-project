@@ -142,7 +142,9 @@ public class CrewService {
     // 크루 탈퇴
     @Transactional
     public void leaveCrew(UUID userId, UUID crewId) {
-        Crew crew = findCrew(crewId);
+        // 비관적 잠금 - JoinCrew와 동일
+        Crew crew = crewRepository.findByIdWithLock(crewId)
+                .orElseThrow(() -> new BusinessException("크루를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
 
         CrewMember member = crewMemberRepository
                 .findByCrewIdAndUserId(crewId, userId)
