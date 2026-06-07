@@ -87,4 +87,7 @@ public class Crew {
         return this.visibility == Visibility.PUBLIC;
     }
 
+    // visibility 변경
+    public void updateVisibility(Visibility visibility) { this.visibility = visibility; }
+
 }

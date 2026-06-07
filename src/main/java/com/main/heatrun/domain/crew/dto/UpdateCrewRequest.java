@@ -1,5 +1,6 @@
 package com.main.heatrun.domain.crew.dto;
 
+import com.main.heatrun.global.enums.Visibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -10,6 +11,9 @@ public record UpdateCrewRequest(
         String name,
 
         @Size(max = 200, message = "크루 소개는 200자 이하여야 합니다.")
-        String description
+        String description,
+
+        // PUBLIC <-> PRIVATE 변경 가능
+        Visibility visibility
 ) {
 }

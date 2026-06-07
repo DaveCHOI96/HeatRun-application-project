@@ -174,6 +174,11 @@ public class CrewService {
             throw new BusinessException("이미 사용 중인 크루 이름입니다.", HttpStatus.CONFLICT);
         }
         crew.update(request.name(), request.description());
+
+        // visibility 변경 (null 이면 기존 값 유지)
+        if (request.visibility() != null) {
+            crew.updateVisibility(request.visibility());
+        }
         log.info("크루 정보 수정: crewId={}", crewId);
         return CrewResponse.from(crew);
     }
