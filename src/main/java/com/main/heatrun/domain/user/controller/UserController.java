@@ -1,10 +1,7 @@
 package com.main.heatrun.domain.user.controller;
 
 import com.main.heatrun.domain.entity.User;
-import com.main.heatrun.domain.user.dto.UpdateLocationScopeRequest;
-import com.main.heatrun.domain.user.dto.UpdateNicknameRequest;
-import com.main.heatrun.domain.user.dto.UpdatePrivacyZoneRequest;
-import com.main.heatrun.domain.user.dto.UserResponse;
+import com.main.heatrun.domain.user.dto.*;
 import com.main.heatrun.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +18,7 @@ public class UserController {
 
     // 내 정보 조회
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getMyInfo(
+    public ResponseEntity<MyProfileResponse> getMyInfo(
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(userService.getMyInfo(user.getId()));
     }

@@ -2,10 +2,7 @@ package com.main.heatrun.domain.user.service;
 
 import com.main.heatrun.domain.entity.User;
 import com.main.heatrun.domain.repository.UserRepository;
-import com.main.heatrun.domain.user.dto.UpdateLocationScopeRequest;
-import com.main.heatrun.domain.user.dto.UpdateNicknameRequest;
-import com.main.heatrun.domain.user.dto.UpdatePrivacyZoneRequest;
-import com.main.heatrun.domain.user.dto.UserResponse;
+import com.main.heatrun.domain.user.dto.*;
 import com.main.heatrun.global.exception.BusinessException;
 import com.main.heatrun.global.security.jwt.JwtProvider;
 import com.main.heatrun.global.util.NicknameGenerator;
@@ -36,9 +33,9 @@ public class UserService {
 
     //내 정보 조회
     @Transactional(readOnly = true)
-    public UserResponse getMyInfo(UUID userId) {
+    public MyProfileResponse getMyInfo(UUID userId) {
         User user = findActiveUser(userId);
-        return UserResponse.from(user);
+        return MyProfileResponse.from(user);
     }
 
     // 닉네임 변경
